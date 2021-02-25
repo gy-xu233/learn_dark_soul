@@ -10,16 +10,16 @@ public class ActorController : MonoBehaviour
     public PhysicMaterial materialZero;
 
     public GameObject model;
-    public CameraController cameraController;
+    public CameraController camCon;
 
     private CapsuleCollider col;
     private float movinSpeed = 2.0f;
     private float jumpHeight = 3.8f;
     private bool OnGround;
-    private float fall;
     private float rollHeight = 3.0f;
 
     private bool LockPlanar;
+    private bool trackDirection;
     private bool canAttack;
     private bool canRoll;
     private Animator anim;
@@ -36,7 +36,6 @@ public class ActorController : MonoBehaviour
         PInput = GetComponent<PlayerInput>();
         rigid_body = GetComponent<Rigidbody>();
         LockPlanar = false;
-        fall = 0;
         OnGround = true;
         col = GetComponent<CapsuleCollider>();
     }
@@ -49,8 +48,6 @@ public class ActorController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        anim.SetFloat("forward", Mathf.Lerp(anim.GetFloat("forward"), PInput.Dmag,0.05f));
-        anim.SetFloat("fall", (OnGround ? 0 :(Time.time - fall)));
         anim.SetBool("defence", PInput.defence);
         if ((PInput.roll && canRoll) || rigid_body.velocity.magnitude > 7f)
         {
@@ -73,15 +70,38 @@ public class ActorController : MonoBehaviour
 
         if (PInput.mLock)
         {
-            cameraController.LockUnLock();
+            camCon.LockUnLock();
         }
-        if(PInput.Dmag > 0.1f)
+        if(!camCon.lockState)
         {
-            model.transform.forward = Vector3.Slerp(model.transform.forward,PInput.Dvec,0.12f);
+            anim.SetFloat("forward", Mathf.Lerp(anim.GetFloat("forward"), PInput.Dmag, 0.05f));
+            if (PInput.Dmag > 0.1f)
+            {
+                model.transform.forward = Vector3.Slerp(model.transform.forward, PInput.Dvec, 0.12f);
+            }
+            if (!LockPlanar)
+            {
+                planarVec = PInput.Dmag * model.transform.forward * movinSpeed;
+            }
         }
-        if (!LockPlanar)
+        else
         {
-            planarVec = PInput.Dmag * model.transform.forward * movinSpeed;
+            Vector3 localDvec = PInput.Dmag * transform.InverseTransformVector(PInput.Dvec);
+            anim.SetFloat("forward", Mathf.Lerp(anim.GetFloat("forward"), localDvec.z, 0.05f));
+            anim.SetFloat("right", Mathf.Lerp(anim.GetFloat("right"), localDvec.x, 0.05f));
+            
+            if(!trackDirection)
+            {
+                model.transform.forward = transform.forward;
+            }
+            else
+            {
+                model.transform.forward = planarVec.normalized;
+            }
+            if (!LockPlanar)
+            {
+                planarVec = PInput.Dvec.normalized * PInput.Dmag * movinSpeed;
+            }
         }
     }
 
@@ -112,7 +132,6 @@ public class ActorController : MonoBehaviour
 
     public void NotOnGround()
     {
-        if (OnGround) fall = Time.time;
         OnGround = false;
         anim.SetBool("onGround", false);
     }
@@ -122,6 +141,7 @@ public class ActorController : MonoBehaviour
         PInput.inputEnable = false;
         LockPlanar = true;
         extraVec = new Vector3(0, jumpHeight, 0);
+        trackDirection = true;
     }
     public void FallOnEnter()
     {
@@ -132,6 +152,7 @@ public class ActorController : MonoBehaviour
     {
         PInput.inputEnable = true;
         LockPlanar = false;
+        trackDirection = false;
         canAttack = true;
         col.material = materialOne;
     }
@@ -146,6 +167,7 @@ public class ActorController : MonoBehaviour
         extraVec = new Vector3(0, rollHeight, 0);
         PInput.inputEnable = false;
         LockPlanar = true;
+        trackDirection = true;
     }
     public void JabOnEnter()
     {

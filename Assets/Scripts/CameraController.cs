@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 public class CameraController : MonoBehaviour
 {
@@ -8,6 +10,8 @@ public class CameraController : MonoBehaviour
     public float horizontalSpeed;
     public float verticalSpeed;
     public float cameraDampValue;
+    public Image lockDot;
+    public bool lockState;
 
     private GameObject model;
     private GameObject playerHandle;
@@ -25,6 +29,8 @@ public class CameraController : MonoBehaviour
         playerHandle = cameraHandle.transform.parent.gameObject;
         model = playerHandle.GetComponent<ActorController>().model;
         Mcamera = Camera.main.gameObject;
+        lockDot.enabled = false;
+        lockState = false;
 
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -32,7 +38,7 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     private void FixedUpdate()
     {
-        if(lockTarget == null)
+        if(!lockState)
         {
             Vector3 modelAngular = model.transform.eulerAngles;
             playerHandle.transform.Rotate(Vector3.up, pi.JRight * horizontalSpeed * Time.fixedDeltaTime);
@@ -43,6 +49,7 @@ public class CameraController : MonoBehaviour
         }
         else
         {
+            lockDot.transform.position = Camera.main.WorldToScreenPoint(lockTarget.transform.position);
             Vector3 forwardVector = lockTarget.transform.position - playerHandle.transform.position;
             forwardVector.y = 0;
             playerHandle.transform.forward = forwardVector.normalized;
@@ -63,13 +70,22 @@ public class CameraController : MonoBehaviour
             if (item .gameObject== lockTarget)
             {
                 lockTarget = null;
+                lockDot.enabled = false;
+                lockState = false;
             }
             else
             {
                 lockTarget = item.gameObject;
+                lockDot.enabled = true;
+                lockState = true;
             }
             break;
         }
-        if (cols.Length == 0) lockTarget = null;
+        if (cols.Length == 0)
+        {
+            lockTarget = null;
+            lockDot.enabled = false;
+            lockState = false;
+        }
     }
 }

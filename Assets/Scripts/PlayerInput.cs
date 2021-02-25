@@ -69,7 +69,7 @@ public class PlayerInput : MonoBehaviour
         if (!inputEnable)
         {
             myButtonRun.Tick(false);
-            myButtonAttack.Tick(false);
+            myButtonAttack.Tick(Input.GetKey(keyAttack));
             myButtonLock.Tick(false);
         }
         else
