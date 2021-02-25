@@ -9,11 +9,11 @@ public class OnGroundSensor : MonoBehaviour
     private Vector3 vec1;
     private Vector3 vec2;
     private float radius;
-    private float offset = 0.2f;
+    private float offset = 0.4f;
 
     private void Awake()
     {
-        radius = capsule.radius - 0.1f;
+        radius = capsule.radius - 0.2f;
     }
 
     private void FixedUpdate()
