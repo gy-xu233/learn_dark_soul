@@ -8,7 +8,9 @@ public class ActorController : MonoBehaviour
     [Header("friction signal")]
     public PhysicMaterial materialOne;
     public PhysicMaterial materialZero;
+
     public GameObject model;
+    public CameraController cameraController;
 
     private CapsuleCollider col;
     private float movinSpeed = 2.0f;
@@ -19,6 +21,7 @@ public class ActorController : MonoBehaviour
 
     private bool LockPlanar;
     private bool canAttack;
+    private bool canRoll;
     private Animator anim;
     private PlayerInput PInput;
     private Vector3 planarVec;
@@ -49,14 +52,28 @@ public class ActorController : MonoBehaviour
         anim.SetFloat("forward", Mathf.Lerp(anim.GetFloat("forward"), PInput.Dmag,0.05f));
         anim.SetFloat("fall", (OnGround ? 0 :(Time.time - fall)));
         anim.SetBool("defence", PInput.defence);
-        if(PInput.attack&&checkState("ground")&&anim.GetBool("onGround")&&canAttack)
+        if ((PInput.roll && canRoll) || rigid_body.velocity.magnitude > 7f)
         {
-            anim.SetTrigger("attack");
+            anim.SetTrigger("roll");
+            canAttack = false;
+
         }
-        if(PInput.jump)
+
+        if (PInput.jump && canRoll)
         {
             anim.SetTrigger("jump");
             canAttack = false;
+        }
+
+        if (PInput.attack&&checkState("ground")&&anim.GetBool("onGround")&&canAttack)
+        {
+            anim.SetTrigger("attack");
+            canRoll = false;
+        }
+
+        if (PInput.mLock)
+        {
+            cameraController.LockUnLock();
         }
         if(PInput.Dmag > 0.1f)
         {
@@ -159,6 +176,7 @@ public class ActorController : MonoBehaviour
     {
         PInput.inputEnable = true;
         LockPlanar = false;
+        canRoll = true;
         targetLerp = 0f;
     }
 

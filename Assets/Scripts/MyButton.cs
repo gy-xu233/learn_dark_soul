@@ -8,24 +8,35 @@ public class MyButton
     public bool isPressed;
     public bool isReleased;
     public bool isExtending;
+    public bool isLagging;
 
     private bool currentState;
     private bool lastState;
-    private float timmerDuration = 0.15f;
-    private MyTimmer timmer = new MyTimmer();
+    private float extendingDuration = 0.15f;
+    private float lagDuration = 0.15f;
+
+    private MyTimmer extendingTimmer = new MyTimmer();
+    private MyTimmer lagTimmer = new MyTimmer();
 
     public void Tick(bool input)
     {
-        timmer.Tick();
+        extendingTimmer.Tick();
+        lagTimmer.Tick();
         currentState = input;
         onPressing = currentState;
         isPressed = currentState && (!lastState);
         isReleased = !currentState && lastState;
         if(isReleased)
         {
-            timmer.Go(timmerDuration);
+            extendingTimmer.Go(extendingDuration);
         }
-        isExtending = (timmer.state == MyTimmer.STATE.Run);
+        if(isPressed)
+        {
+            lagTimmer.Go(lagDuration);
+        }
+        isExtending = (extendingTimmer.state == MyTimmer.STATE.Run);
+        isLagging = (lagTimmer.state == MyTimmer.STATE.Run);
+
         lastState = currentState;
     }
 }

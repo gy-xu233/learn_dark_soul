@@ -11,10 +11,10 @@ public class PlayerInput : MonoBehaviour
     public string keyLeft = "a";
     public string keyRight = "d";
 
-    public string keyA = "left shift";
-    public string keyB;
-    public string keyC;
-    public string keyD;
+    public string keyLock;
+    public string keyRun;
+    public string keyAttack;
+    public string keyDefence;
 
     public string keyJUp;
     public string keyJDown;
@@ -27,10 +27,14 @@ public class PlayerInput : MonoBehaviour
     public float Dmag;
     public float JUp;
     public float JRight;
+    public bool roll;
     public bool run;
     public bool jump;
     public bool attack;
     public bool defence;
+    public bool mLock;
+    public bool move;
+
 
     [Header("other")]
     public Vector3 Dvec;
@@ -45,10 +49,10 @@ public class PlayerInput : MonoBehaviour
     private float upVelocity;
     private float rightVelocity;
     
-    private MyButton myButtonA = new MyButton();
-    private MyButton myButtonB = new MyButton();
-    private MyButton myButtonC = new MyButton();
-    private MyButton myButtonD = new MyButton();
+    private MyButton myButtonLock = new MyButton();
+    private MyButton myButtonRun = new MyButton();
+    private MyButton myButtonAttack = new MyButton();
+    private MyButton myButtonDefence = new MyButton();
 
     private void Awake()
     {
@@ -62,8 +66,18 @@ public class PlayerInput : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        myButtonB.Tick(Input.GetKey(keyB));
-        myButtonC.Tick(Input.GetKey(keyC));
+        if (!inputEnable)
+        {
+            myButtonRun.Tick(false);
+            myButtonAttack.Tick(false);
+            myButtonLock.Tick(false);
+        }
+        else
+        {
+            myButtonRun.Tick(Input.GetKey(keyRun));
+            myButtonAttack.Tick(Input.GetKey(keyAttack));
+            myButtonLock.Tick(Input.GetKey(keyLock));
+        }
         if (mouseEnable)
         {
             JUp = Input.GetAxis("Mouse Y") * mouseSensitivityY;
@@ -76,16 +90,21 @@ public class PlayerInput : MonoBehaviour
         }
         targetUp = (Input.GetKey(keyUp) ? 1.0f : 0) - (Input.GetKey(keyDown) ? 1.0f : 0);
         targetRight = (Input.GetKey(keyRight) ? 1.0f : 0) - (Input.GetKey(keyLeft) ? 1.0f : 0);
-        defence = Input.GetKey(keyD);
-        run = Input.GetKey(keyA);
-        jump = myButtonB.isPressed;
-        Debug.Log(myButtonB.isPressed && myButtonB.isExtending);
-        attack = myButtonC.isPressed;
+
+        defence = Input.GetKey(keyDefence);
+
+        run = (myButtonRun.onPressing && !myButtonRun.isLagging) || myButtonRun.isExtending;
+        jump = myButtonRun.isPressed && myButtonRun.isExtending;
+        roll = myButtonRun.isReleased && myButtonRun.isLagging;
+        attack = myButtonAttack.isPressed;
+        mLock = myButtonLock.isPressed;
+
         if (!inputEnable)
         {
             targetRight = 0;
             targetUp = 0;
             jump = false;
+            roll = false;
         }
         Dup = Mathf.SmoothDamp(Dup, targetUp, ref upVelocity,0.1f);
         Dright = Mathf.SmoothDamp(Dright, targetRight, ref rightVelocity, 0.1f);
